@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from models.models import User, Partner, UserRole
+from models.models import User, Partner, UserRole, ChatHistory, Target, EmailLog
 from schemas.schemas import PartnerCreate, PartnerUpdate, PartnerOut, UserOut
 from utils.auth import hash_password, require_admin, get_current_user
 from services.email_service import send_email, onboarding_template
@@ -55,7 +55,6 @@ async def create_partner(
         to_email=payload.email,
         subject="Welcome to TrustPay Loans Partner Portal! 🎉",
         html_body=html,
-        db=db,
         email_type="onboarding"
     )
     return partner
@@ -67,6 +66,16 @@ def get_all_partners(
 ):
     return db.query(Partner).all()
 
+@router.get("/me/profile", response_model=PartnerOut)
+def my_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    partner = db.query(Partner).filter(Partner.user_id == current_user.id).first()
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner profile not found")
+    return partner
+
 @router.get("/{partner_id}", response_model=PartnerOut)
 def get_partner(
     partner_id: int,
@@ -76,7 +85,6 @@ def get_partner(
     partner = db.query(Partner).filter(Partner.id == partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
-    # Partners can only view their own profile
     if current_user.role == UserRole.partner and partner.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     return partner
@@ -91,13 +99,13 @@ def update_partner(
     partner = db.query(Partner).filter(Partner.id == partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
-    
+
     update_data = payload.dict(exclude_unset=True)
     if "name" in update_data:
         partner.user.name = update_data.pop("name")
     for key, value in update_data.items():
         setattr(partner, key, value)
-    
+
     db.commit()
     db.refresh(partner)
     return partner
@@ -111,18 +119,18 @@ def delete_partner(
     partner = db.query(Partner).filter(Partner.id == partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
+
     user = partner.user
+
+    # ✅ Delete all related data first
+    db.query(ChatHistory).filter(ChatHistory.user_id == user.id).delete()
+    db.query(Target).filter(Target.partner_id == partner.id).delete()
+    db.query(EmailLog).filter(EmailLog.recipient_email == user.email).delete()
+
+    # ✅ Then delete partner and user
     db.delete(partner)
+    db.flush()
     db.delete(user)
     db.commit()
-    return {"message": "Partner deleted successfully"}
 
-@router.get("/me/profile", response_model=PartnerOut)
-def my_profile(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    partner = db.query(Partner).filter(Partner.user_id == current_user.id).first()
-    if not partner:
-        raise HTTPException(status_code=404, detail="Partner profile not found")
-    return partner
+    return {"message": "Partner deleted successfully"}

@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_MB: int = 10
     FRONTEND_URL: str = "http://localhost:3000"
 
+    BACKEND_URL: str = "http://localhost:8000"
+
+    IMGBB_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
 
