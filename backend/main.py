@@ -6,6 +6,10 @@ from models import models  # noqa: ensure models are registered
 from routers import auth, partners, targets, chat, dashboard
 from config import settings
 import os
+from fastapi.staticfiles import StaticFiles
+from routers import reports  # add this import
+
+ 
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -37,6 +41,7 @@ app.include_router(partners.router)
 app.include_router(targets.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
+app.include_router(reports.router)  # include the reports router
 
 @app.get("/")
 def root():

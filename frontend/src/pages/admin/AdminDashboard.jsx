@@ -1,16 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { getAdminStats } from '../../services/api';
+import { getAdminStats, downloadReport } from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import toast from 'react-hot-toast';
 
 const COLORS = ['#e2b04a', '#0f3460', '#16213e', '#38a169', '#e53e3e'];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState('');
 
   useEffect(() => {
     getAdminStats().then(r => setStats(r.data)).finally(() => setLoading(false));
   }, []);
+
+  const handleDownload = async (format) => {
+    setDownloading(format);
+    try {
+      const res = await downloadReport(format);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `partners_report.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success(`${format.toUpperCase()} downloaded successfully!`);
+    } catch {
+      toast.error('Failed to download report');
+    } finally {
+      setDownloading('');
+    }
+  };
 
   if (loading) return <div style={styles.loading}>Loading dashboard...</div>;
 
@@ -22,8 +43,32 @@ export default function AdminDashboard() {
   return (
     <div>
       <div style={styles.header}>
-        <h1 style={styles.title}>Admin Dashboard</h1>
-        <p style={styles.sub}>Welcome back! Here's your overview.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={styles.title}>Admin Dashboard</h1>
+            <p style={styles.sub}>Welcome back! Here's your overview.</p>
+          </div>
+
+          {/* ✅ Download Buttons */}
+          <div style={styles.downloadSection}>
+            <span style={styles.downloadLabel}>📥 Download Report:</span>
+            <div style={styles.downloadButtons}>
+              <button
+                onClick={() => handleDownload('pdf')}
+                disabled={downloading === 'pdf'}
+                style={{ ...styles.downloadBtn, background: '#e53e3e' }}>
+                {downloading === 'pdf' ? '⏳...' : '📄 PDF'}
+              </button>
+              
+              <button
+                onClick={() => handleDownload('csv')}
+                disabled={downloading === 'csv'}
+                style={{ ...styles.downloadBtn, background: '#0f3460' }}>
+                {downloading === 'csv' ? '⏳...' : '📋 EXCEL'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -129,19 +174,21 @@ const styles = {
   header: { marginBottom: 32 },
   title: { fontSize: 28, fontWeight: 800, color: '#1a1a2e', margin: '0 0 4px' },
   sub: { color: '#718096', margin: 0 },
+  downloadSection: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 },
+  downloadLabel: { fontSize: 13, color: '#718096', fontWeight: 600 },
+  downloadButtons: { display: 'flex', gap: 10 },
+  downloadBtn: {
+    padding: '10px 18px', border: 'none', borderRadius: 10,
+    color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+    transition: 'opacity 0.2s', opacity: 1,
+  },
   grid4: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20, marginBottom: 24 },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 },
-  card: {
-    background: '#fff', borderRadius: 16, padding: '24px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-  },
+  card: { background: '#fff', borderRadius: 16, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' },
   cardIcon: { fontSize: 28, marginBottom: 12 },
   cardValue: { fontSize: 36, fontWeight: 800, lineHeight: 1 },
   cardLabel: { color: '#718096', fontSize: 13, marginTop: 6 },
-  chartCard: {
-    background: '#fff', borderRadius: 16, padding: '24px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: 24,
-  },
+  chartCard: { background: '#fff', borderRadius: 16, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: 24 },
   chartTitle: { fontSize: 16, fontWeight: 700, color: '#1a1a2e', margin: '0 0 16px' },
   empty: { color: '#a0aec0', textAlign: 'center', padding: '40px 0', fontSize: 14 },
   table: { width: '100%', borderCollapse: 'collapse' },

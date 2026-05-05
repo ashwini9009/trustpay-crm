@@ -29,7 +29,11 @@ export default function Login() {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.logoArea}>
-          <div style={styles.logo}>TP</div>
+          <div style={styles.logo}><img 
+    src="/logo.jpeg" 
+    alt="TrustPay" 
+    style={{ width: '100%', height: '100%', objectFit: 'contain' , transform:'scale(1.2)' }} 
+  /></div>
           <h1 style={styles.brand}>TrustPay Loans</h1>
           <p style={styles.tagline}>Partner CRM Portal</p>
         </div>
@@ -60,7 +64,7 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign In →'}
           </button>
         </form>
-        <p style={styles.footer}>© 2025 TrustPay Loans. All rights reserved.</p>
+        <p style={styles.footer}>© 2026 TrustPay Loans. All rights reserved.</p>
       </div>
     </div>
   );
@@ -86,7 +90,7 @@ const styles = {
   logoArea: { textAlign: 'center', marginBottom: 36 },
   logo: {
     width: 64, height: 64, borderRadius: 16,
-    background: 'linear-gradient(135deg, #e2b04a, #c9953a)',
+    background: 'linear-gradient(135deg, #fafafa, #fcfcfc)',
     color: '#fff', fontSize: 24, fontWeight: 800,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     margin: '0 auto 16px',

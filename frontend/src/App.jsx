@@ -11,6 +11,10 @@ import PartnerDashboard from './pages/partner/PartnerDashboard';
 import PartnerTargets from './pages/partner/PartnerTargets';
 import PartnerProfile from './pages/partner/PartnerProfile';
 import AIChat from './pages/AIChat';
+import LoanCalculator from './pages/LoanCalculator';
+
+import SalariedLoanCalculator from './pages/SalariedLoanCalculator';
+
 
 function ProtectedRoute({ children, requiredRole }) {
   const { user, loading } = useAuth();
@@ -29,7 +33,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/partner/dashboard'} replace /> : <Login />} />
-      
+
       {/* Admin Routes */}
       <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><AdminPartners /></ProtectedRoute>} />
@@ -41,6 +45,10 @@ function AppRoutes() {
       <Route path="/partner/targets" element={<ProtectedRoute requiredRole="partner"><PartnerTargets /></ProtectedRoute>} />
       <Route path="/partner/profile" element={<ProtectedRoute requiredRole="partner"><PartnerProfile /></ProtectedRoute>} />
       <Route path="/partner/chat" element={<ProtectedRoute requiredRole="partner"><AIChat /></ProtectedRoute>} />
+
+      {/* ✅ Loan Calculator - accessible by both admin and partner */}
+      <Route path="/calculator" element={<ProtectedRoute><LoanCalculator /></ProtectedRoute>} />
+      <Route path="/salaried-calculator" element={<ProtectedRoute><SalariedLoanCalculator /></ProtectedRoute>} />
 
       {/* Default redirect */}
       <Route path="/" element={<Navigate to="/login" replace />} />

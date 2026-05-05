@@ -7,6 +7,8 @@ const adminLinks = [
   { to: '/admin/partners', icon: '🤝', label: 'Partners' },
   { to: '/admin/targets', icon: '🎯', label: 'Targets' },
   { to: '/admin/chat', icon: '🤖', label: 'AI Assistant' },
+  { to: '/calculator', icon: '🏦', label: 'Loan Calculator' }, // ✅ added
+  { to: '/salaried-calculator', icon: '💼', label: 'Salaried Calculator' },
 ];
 
 const partnerLinks = [
@@ -14,6 +16,9 @@ const partnerLinks = [
   { to: '/partner/targets', icon: '🎯', label: 'My Targets' },
   { to: '/partner/profile', icon: '👤', label: 'My Profile' },
   { to: '/partner/chat', icon: '🤖', label: 'AI Assistant' },
+  { to: '/calculator', icon: '🏦', label: 'Loan Calculator' }, // ✅ added
+  { to: '/salaried-calculator', icon: '💼', label: 'Salaried Calculator' },
+
 ];
 
 export default function Layout({ children }) {
@@ -35,10 +40,16 @@ export default function Layout({ children }) {
       <aside style={{ ...styles.sidebar, width: collapsed ? 72 : 240 }}>
         <div style={styles.sideTop}>
           <div style={styles.logoRow}>
-            <div style={styles.logoBox}>TP</div>
+<div style={styles.logoBox}>
+  <img 
+    src="/logo.jpeg" 
+    alt="TrustPay" 
+    style={{ width: '100%', height: '100%', objectFit: 'contain' , transform:'scale(1.1)' }} 
+  />
+</div>
             {!collapsed && (
               <div>
-                <div style={styles.brandName}>TrustPay</div>
+                <div style={styles.brandName}>TrustPayLoans</div>
                 <div style={styles.brandSub}>Loans CRM</div>
               </div>
             )}
@@ -47,7 +58,6 @@ export default function Layout({ children }) {
             {collapsed ? '→' : '←'}
           </button>
         </div>
-
         {!collapsed && (
           <div style={styles.roleChip}>
             {user?.role === 'admin' ? '🛡️ Admin' : '🤝 Partner'}
@@ -85,7 +95,7 @@ export default function Layout({ children }) {
       </aside>
 
       {/* Main */}
-      <main style={styles.main}>
+      <main style={{ ...styles.main, marginLeft: collapsed ? 72 : 240 }}>
         {children}
       </main>
     </div>
@@ -102,12 +112,15 @@ const styles = {
   },
   sideTop: { padding: '24px 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   logoRow: { display: 'flex', alignItems: 'center', gap: 10 },
-  logoBox: {
-    width: 40, height: 40, borderRadius: 10,
-    background: 'linear-gradient(135deg, #e2b04a, #c9953a)',
-    color: '#fff', fontSize: 14, fontWeight: 800,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
+logoBox: {
+  width: 56, height: 56, borderRadius: 12,
+  background: '#fff',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  overflow: 'hidden',
+  padding: 2,
+
+  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+},
   brandName: { color: '#e2b04a', fontSize: 15, fontWeight: 800, lineHeight: 1.2 },
   brandSub: { color: '#718096', fontSize: 11 },
   collapseBtn: {
@@ -142,5 +155,5 @@ const styles = {
     width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
     background: 'rgba(239,68,68,0.15)', color: '#fc8181', fontSize: 13, fontWeight: 600,
   },
-  main: { flex: 1, marginLeft: 240, padding: '32px', minHeight: '100vh', transition: 'margin-left 0.3s' },
+  main: { flex: 1, padding: '32px', minHeight: '100vh', transition: 'margin-left 0.3s' },
 };

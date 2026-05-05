@@ -5,9 +5,9 @@ from database import get_db
 from models.models import User, Partner, Target, UserRole
 from schemas.schemas import TargetCreate, TargetUpdate, TargetOut
 from utils.auth import require_admin, get_current_user
-from services.email_service import send_email, progress_template, reward_template
+from services.email_service import send_email, progress_template, reward_template, target_assigned_template
 from config import settings
-import os, uuid, aiofiles
+import os, uuid, aiofiles, random, base64, requests
 
 router = APIRouter(prefix="/api/targets", tags=["Targets"])
 
@@ -20,7 +20,32 @@ MOTIVATIONAL_QUOTES = [
     "Believe in yourself and your potential. Every number counts! 💯",
 ]
 
-import random
+def upload_image_to_imgbb(image_path: str) -> str:
+    """Upload image to ImgBB and return public URL — works on ALL email clients"""
+    if not image_path or not os.path.exists(image_path):
+        return None
+    try:
+        with open(image_path, "rb") as f:
+            img_data = base64.b64encode(f.read()).decode()
+        response = requests.post(
+            "https://api.imgbb.com/1/upload",
+            data={
+                "key": settings.IMGBB_API_KEY,
+                "image": img_data,
+            },
+            timeout=10
+        )
+        result = response.json()
+        if result.get("success"):
+            url = result["data"]["url"]
+            print(f"[ImgBB] Image uploaded: {url}")
+            return url
+        else:
+            print(f"[ImgBB Error] {result}")
+            return None
+    except Exception as e:
+        print(f"[ImgBB Error] {e}")
+        return None
 
 @router.post("/", response_model=TargetOut)
 def create_target(
@@ -31,7 +56,7 @@ def create_target(
     partner = db.query(Partner).filter(Partner.id == payload.partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
-    
+
     target = Target(**payload.dict())
     db.add(target)
     db.commit()
@@ -49,6 +74,7 @@ async def create_target_with_image(
     end_date: Optional[str] = Form(None),
     reward: Optional[str] = Form(None),
     reward_image: Optional[UploadFile] = File(None),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
@@ -82,6 +108,24 @@ async def create_target_with_image(
     db.add(target)
     db.commit()
     db.refresh(target)
+
+    # ✅ Send target assignment email
+    user = partner.user
+    html = target_assigned_template(
+        user.name,
+        title,
+        target_value,
+        reward or "Special Reward",
+        end_date
+    )
+    background_tasks.add_task(
+        send_email,
+        to_email=user.email,
+        subject=f"🎯 New Target Assigned: {title}",
+        html_body=html,
+        email_type="target_assigned"
+    )
+
     return target
 
 @router.get("/", response_model=List[TargetOut])
@@ -132,13 +176,12 @@ async def update_target(
     for key, value in update_data.items():
         setattr(target, key, value)
 
-    # Check if newly completed
     new_achieved = target.achieved_value
     partner = target.partner
     user = partner.user
 
+    # ✅ Send progress email
     if new_achieved > old_achieved:
-        # Send progress email
         motivation = random.choice(MOTIVATIONAL_QUOTES)
         html = progress_template(user.name, target.title, new_achieved, target.target_value, motivation)
         background_tasks.add_task(
@@ -146,21 +189,29 @@ async def update_target(
             to_email=user.email,
             subject=f"🚀 Progress Update: {target.title}",
             html_body=html,
-            db=db,
             email_type="progress"
         )
 
+    # ✅ Send reward email with ImgBB public URL — works on ALL devices
     if target.achieved_value >= target.target_value and not target.is_completed:
         target.is_completed = True
-        html = reward_template(user.name, target.title, target.reward or "Special Reward", bool(target.reward_image))
+
+        # ✅ Upload to ImgBB and get public URL
+        image_url = upload_image_to_imgbb(target.reward_image)
+        print(f"[Reward Email] Image URL: {image_url}")
+
+        html = reward_template(
+            user.name,
+            target.title,
+            target.reward or "Special Reward",
+            image_url=image_url
+        )
         background_tasks.add_task(
             send_email,
             to_email=user.email,
             subject=f"🏆 Congratulations! You've achieved: {target.title}",
             html_body=html,
-            db=db,
-            email_type="reward",
-            image_path=target.reward_image
+            email_type="reward"
         )
 
     db.commit()

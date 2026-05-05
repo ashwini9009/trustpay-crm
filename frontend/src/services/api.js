@@ -19,7 +19,9 @@ API.interceptors.response.use(
   }
 );
 
-
+// Reports
+export const downloadReport = (format) =>
+  API.get(`/api/reports/${format}`, { responseType: 'blob' });
 
 // Auth
 export const login = (data) => API.post('/api/auth/login', data);

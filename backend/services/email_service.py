@@ -24,13 +24,6 @@ async def send_email(
     msg.attach(alt)
     alt.attach(MIMEText(html_body, "html"))
 
-    if image_path and os.path.exists(image_path):
-        with open(image_path, "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", "<reward_image>")
-            img.add_header("Content-Disposition", "inline", filename=os.path.basename(image_path))
-            msg.attach(img)
-
     success = True
     error_msg = None
     try:
@@ -86,7 +79,7 @@ def onboarding_template(name: str, email: str, password: str, company: str) -> s
         <p style="color:#718096;font-size:13px;text-align:center;margin:0;">For any queries, contact your TrustPay relationship manager.</p>
       </div>
       <div style="background:#f8f9ff;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2025 TrustPay Loans. All rights reserved.</p>
+        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2026 TrustPay Loans. All rights reserved.</p>
       </div>
     </div>
     </body></html>
@@ -119,14 +112,23 @@ def progress_template(name: str, target_title: str, achieved: float, target: flo
         </div>
       </div>
       <div style="background:#f8f9ff;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2025 TrustPay Loans. All rights reserved.</p>
+        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2026 TrustPay Loans. All rights reserved.</p>
       </div>
     </div>
     </body></html>
     """
 
-def reward_template(name: str, target_title: str, reward: str, has_image: bool = False) -> str:
-    img_section = '<img src="cid:reward_image" style="width:100%;border-radius:12px;margin:16px 0;" />' if has_image else ""
+def reward_template(name: str, target_title: str, reward: str, image_url: str = None) -> str:
+    img_section = ""
+    if image_url:
+        img_section = f"""
+        <div style="text-align:center;margin:16px 0;">
+            <img src="{image_url}"
+                 style="width:100%;max-width:500px;border-radius:12px;
+                        display:block;margin:0 auto;"
+                 alt="Reward Image" />
+        </div>
+        """
     return f"""
     <html><body style="font-family:'Segoe UI',sans-serif;background:#f4f7fb;margin:0;padding:0;">
     <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
@@ -149,7 +151,39 @@ def reward_template(name: str, target_title: str, reward: str, has_image: bool =
         </div>
       </div>
       <div style="background:#f8f9ff;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2025 TrustPay Loans. All rights reserved.</p>
+        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2026 TrustPay Loans. All rights reserved.</p>
+      </div>
+    </div>
+    </body></html>
+    """
+
+def target_assigned_template(name: str, title: str, target_value: float, reward: str, end_date: str = None) -> str:
+    # ✅ New function — sends email when target is assigned
+    deadline = f"<p style='margin:4px 0;color:#4a5568;'><strong>Deadline:</strong> {end_date}</p>" if end_date else ""
+    return f"""
+    <html><body style="font-family:'Segoe UI',sans-serif;background:#f4f7fb;margin:0;padding:0;">
+    <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+      <div style="background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);padding:40px 32px;text-align:center;">
+        <h1 style="color:#e2b04a;margin:0;font-size:28px;letter-spacing:2px;">TRUSTPAY LOANS</h1>
+        <p style="color:#a0aec0;margin:8px 0 0;">🎯 New Target Assigned!</p>
+      </div>
+      <div style="padding:40px 32px;">
+        <h2 style="color:#1a1a2e;">Hello, {name}!</h2>
+        <p style="color:#4a5568;line-height:1.7;">A new target has been assigned to you. Let's achieve it together!</p>
+        <div style="background:#f8f9ff;border-left:4px solid #e2b04a;border-radius:8px;padding:20px;margin:24px 0;">
+          <h3 style="color:#1a1a2e;margin:0 0 12px;font-size:16px;">Target Details</h3>
+          <p style="margin:4px 0;color:#4a5568;"><strong>Target:</strong> {title}</p>
+          <p style="margin:4px 0;color:#4a5568;"><strong>Target Value:</strong> ₹{target_value:,.0f}</p>
+          <p style="margin:4px 0;color:#4a5568;"><strong>Reward:</strong> 🏆 {reward}</p>
+          {deadline}
+        </div>
+        <p style="color:#4a5568;line-height:1.7;">Login to your partner portal to track your progress and stay motivated!</p>
+        <div style="text-align:center;margin:32px 0;">
+          <a href="{settings.FRONTEND_URL}/partner/targets" style="background:linear-gradient(135deg,#e2b04a,#c9953a);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:600;font-size:16px;display:inline-block;">View My Targets →</a>
+        </div>
+      </div>
+      <div style="background:#f8f9ff;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+        <p style="color:#a0aec0;font-size:12px;margin:0;">© 2026 TrustPay Loans. All rights reserved.</p>
       </div>
     </div>
     </body></html>
