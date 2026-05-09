@@ -22,15 +22,20 @@ app = FastAPI(
     description="Partner management CRM for TrustPay Loans",
     version="1.0.0"
 )
-
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://trustpay-crm.vercel.app",        # ✅ your vercel URL
+        "https://trustpay-crm-ashwini9009.vercel.app",  # ✅ alternate vercel URL
+        settings.FRONTEND_URL,
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Static files for uploads
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
