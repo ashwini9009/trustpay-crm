@@ -31,8 +31,8 @@ async def send_email(
             await aiosmtplib.send(
                 msg,
                 hostname=settings.SMTP_HOST,
-                port=settings.SMTP_PORT,
-                start_tls=True,
+                port=465,           # ✅ changed from 587 to 465
+                use_tls=True,       # ✅ changed from start_tls to use_tls
                 username=settings.SMTP_USER,
                 password=settings.SMTP_PASSWORD,
             )
@@ -158,7 +158,6 @@ def reward_template(name: str, target_title: str, reward: str, image_url: str = 
     """
 
 def target_assigned_template(name: str, title: str, target_value: float, reward: str, end_date: str = None) -> str:
-    # ✅ New function — sends email when target is assigned
     deadline = f"<p style='margin:4px 0;color:#4a5568;'><strong>Deadline:</strong> {end_date}</p>" if end_date else ""
     return f"""
     <html><body style="font-family:'Segoe UI',sans-serif;background:#f4f7fb;margin:0;padding:0;">
