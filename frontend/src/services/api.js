@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API = axios.create({ baseURL: 'http://localhost:8000' });
+const API = axios.create({ 
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000'  // ✅ fixed
+});
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -56,7 +58,13 @@ export const sendChat = (message) => API.post('/api/chat/', { message });
 export const getChatHistory = () => API.get('/api/chat/history');
 export const clearChat = () => API.delete('/api/chat/history');
 
-
+// Commission
+export const getCommissions = () => API.get('/api/commission/');
+export const setCommissionRate = (targetId, rate, gstRate) => API.put(`/api/commission/${targetId}/set-rate?commission_rate=${rate}&gst_rate=${gstRate}`);
+export const calculateCommission = (targetId) => API.post(`/api/commission/${targetId}/calculate`);
+export const markCommissionPaid = (targetId) => API.put(`/api/commission/${targetId}/mark-paid`);
+export const markCommissionUnpaid = (targetId) => API.put(`/api/commission/${targetId}/mark-unpaid`);
+export const downloadInvoice = (targetId) => API.get(`/api/commission/${targetId}/invoice`, { responseType: 'blob' });
+export const getPartnerCommissionSummary = () => API.get('/api/commission/summary/partners');
 
 export default API;
-

@@ -29,15 +29,17 @@ export default function Login() {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.logoArea}>
-          <div style={styles.logo}><img 
-    src="/logo.jpeg" 
-    alt="TrustPay" 
-    style={{ width: '100%', height: '100%', objectFit: 'contain' , transform:'scale(1.2)' }} 
-  /></div>
+          <div style={styles.logo}>
+            <img
+              src="/logo.jpeg"
+              alt="TrustPay"
+              style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.2)' }}
+            />
+          </div>
           <h1 style={styles.brand}>TrustPay Loans</h1>
           <p style={styles.tagline}>Partner CRM Portal</p>
         </div>
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} style={styles.form} autoComplete="off">
           <div style={styles.field}>
             <label style={styles.label}>Email Address</label>
             <input
@@ -46,6 +48,7 @@ export default function Login() {
               placeholder="partner@example.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              autoComplete="off"  // ✅ disable autofill
               required
             />
           </div>
@@ -57,10 +60,14 @@ export default function Login() {
               placeholder="••••••••"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
+              autoComplete="new-password"  // ✅ disable autofill
               required
             />
           </div>
-          <button style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }} type="submit" disabled={loading}>
+          <button
+            style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }}
+            type="submit"
+            disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In →'}
           </button>
         </form>

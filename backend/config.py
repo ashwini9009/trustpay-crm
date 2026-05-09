@@ -28,5 +28,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"  # ✅ ignore extra fields like python_version
 
 settings = Settings()
